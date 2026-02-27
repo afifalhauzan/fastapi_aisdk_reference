@@ -4,7 +4,7 @@ import type { UIMessage } from "@ai-sdk/react";
 import { motion } from "framer-motion";
 import { Streamdown } from "streamdown";
 
-import { SparklesIcon } from "./icons";
+import { Sparkles } from "lucide-react";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
 import { Weather } from "./weather";
@@ -30,7 +30,7 @@ export const PreviewMessage = ({
       >
         {message.role === "assistant" && (
           <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-            <SparklesIcon size={14} />
+            <Sparkles size={14} />
           </div>
         )}
 
@@ -112,7 +112,7 @@ export const ThinkingMessage = () => {
         )}
       >
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
+          <Sparkles size={14} />
         </div>
 
         <div className="flex flex-col gap-2 w-full">

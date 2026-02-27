@@ -21,7 +21,7 @@ import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
 import { cn, sanitizeUIMessages } from "@/lib/utils";
 
-import { ArrowUpIcon, StopIcon } from "./icons";
+import { ArrowUp, Square } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
@@ -190,7 +190,7 @@ export function MultimodalInput({
             setMessages((messages) => sanitizeUIMessages(messages));
           }}
         >
-          <StopIcon size={14} />
+          <Square size={14} />
         </Button>
       ) : (
         <Button
@@ -201,7 +201,7 @@ export function MultimodalInput({
           }}
           disabled={!input || input.length === 0}
         >
-          <ArrowUpIcon size={14} />
+          <ArrowUp size={14} />
         </Button>
       )}
     </div>
