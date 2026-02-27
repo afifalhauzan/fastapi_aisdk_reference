@@ -29,11 +29,7 @@ Pahami bagian ini agar UI kita tidak "blank" saat agen kalian sedang berpikir:
 
 ### Mengapa Ini Penting?
 
-Mentor kita mencanangkan visi **Agent Marketplace**. Agar layanan AI yang kalian buat bisa "dijual" di marketplace tersebut, komunikasi agen wajib mematuhi protokol **AG-UI** yang ada di repo ini. Dengan mengikuti standar ini:
-
-1. Layanan kalian otomatis punya **Web Playground** yang cantik.
-2. Layanan kalian siap diakses sebagai **MCP Tool** oleh agen eksternal.
-3. **Debugging** menjadi jauh lebih mudah karena setiap langkah agen terdeteksi di LangSmith.
+Mentor kita mencanangkan visi **Chatbot Metabot**. Agar layanan AI yang kalian buat bisa sesuai dengan layanan tersebut, komunikasi agen wajib mematuhi protokol **Vercel Data Stream Protocol** yang ada di repo ini. Dengan mengikuti standar ini, Layanan kalian otomatis punya **Web Playground** yang cantik.
 
 ---
 
