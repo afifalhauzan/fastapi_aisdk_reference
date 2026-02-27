@@ -1,41 +1,40 @@
-# AI SDK Python Streaming Preview
+# 🚀 AI/ML Integration Guide: Bridging Logic to UI
 
-This template demonstrates the usage of [Data Stream Protocol](https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol#data-stream-protocol) to stream chat completions from a Python endpoint ([FastAPI](https://fastapi.tiangolo.com)) and display them using the [useChat](https://sdk.vercel.ai/docs/ai-sdk-ui/chatbot#chatbot) hook in your Next.js application.
+Halo Tim AI/ML! Repo ini adalah referensi standar untuk proyek **"Service Metabot/Generative UI"**. Inti dari panduan ini adalah memastikan bahwa setiap reasoning dan tool calling yang kalian buat di Python bisa tampil secara *seamless* dan interaktif di Web Playground kita.
 
-## Deploy your own
+Kalian cukup fokus mendalami dua file utama: `index.py` dan `stream.py`.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel-labs/ai-sdk-preview-python-streaming)
+---
 
-## How to use
+### 1. File `index.py` (The Gateway)
 
-Run [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+File ini adalah pintu masuk utama. Hal penting yang perlu kalian pahami di sini:
 
-```bash
-npx create-next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
-```
+* **Protocol Handshake:** Kita menggunakan `protocol: str = Query('data')` untuk mencocokkan standar Vercel AI SDK.
+* **Response Headers:** Fungsi `patch_response_with_headers` sangat krusial. Tanpa header ini, Frontend tidak akan tahu cara membedakan mana teks biasa dan mana instruksi visual (grafik/aksi).
 
-```bash
-yarn create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
-```
+---
 
-```bash
-pnpm create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
-```
+### 2. File `stream.py` (The Heart of Communication)
 
-To run the example locally you need to:
+Di sinilah keajaiban terjadi. AI tidak hanya mengirim teks, tapi mengirimkan **Events** menggunakan standar **Data Stream Protocol (DSP)**.
 
-1. Sign up for accounts with the AI providers you want to use (e.g., OpenAI, Anthropic).
-2. Obtain API keys for each provider.
-3. Set the required environment variables as shown in the `.env.example` file, but in a new file called `.env`.
-4. `pnpm install` to install the required Node dependencies.
-5. `virtualenv venv` to create a virtual environment.
-6. `source venv/bin/activate` to activate the virtual environment.
-7. `pip install -r requirements.txt` to install the required Python dependencies.
-8. `pnpm dev` to launch the development server.
+Pahami bagian ini agar UI kita tidak "blank" saat agen kalian sedang berpikir:
 
-## Learn More
+* **text-delta:** Kirimkan potongan teks agar user bisa melihat efek mengetik secara *real-time*.
+* **tool-input-start:** Kirimkan ini saat agen mulai memanggil fungsi (*tool*). UI akan otomatis menampilkan status "Thinking" atau "Searching".
+* **tool-output-available:** Ini bagian paling penting bagi tim BI. Kirimkan JSON hasil olahan data kalian di sini agar Frontend bisa merender Recharts secara otomatis.
 
-To learn more about the AI SDK or Next.js by Vercel, take a look at the following resources:
+---
 
-- [AI SDK Documentation](https://sdk.vercel.ai/docs)
-- [Next.js Documentation](https://nextjs.org/docs)
+### Mengapa Ini Penting?
+
+Mentor kita mencanangkan visi **Agent Marketplace**. Agar layanan AI yang kalian buat bisa "dijual" di marketplace tersebut, komunikasi agen wajib mematuhi protokol **AG-UI** yang ada di repo ini. Dengan mengikuti standar ini:
+
+1. Layanan kalian otomatis punya **Web Playground** yang cantik.
+2. Layanan kalian siap diakses sebagai **MCP Tool** oleh agen eksternal.
+3. **Debugging** menjadi jauh lebih mudah karena setiap langkah agen terdeteksi di LangSmith.
+
+---
+
+> **Selamat bereksperimen!** Jika ada perubahan logika pada model, pastikan format stream-nya tetap mengikuti standar di `stream.py` ya.
