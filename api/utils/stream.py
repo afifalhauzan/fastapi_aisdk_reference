@@ -58,32 +58,40 @@ async def stream_text(
         )
         print(f"[CONFIG] Generation config: temperature=0.7")
 
-        # Start chat without tools in start_chat
-        chat = model.start_chat(history=[])
-        print("[CHAT] Chat session started")
+        # Start chat with conversation history
+        if len(messages) > 1:
+            # Build conversation history (all messages except the last)
+            history = []
+            for msg in messages[:-1]:
+                history.append(msg)
+            
+            print(f"[CHAT] Starting chat with {len(history)} historical messages")
+            chat = model.start_chat(history=history)
+        else:
+            print("[CHAT] Starting fresh chat session")
+            chat = model.start_chat(history=[])
+        
+        chunk_count = 0
         
         chunk_count = 0
 
         # Send the conversation history and get streaming response
         if messages:
-            # For Gemini, we need to send the last message and get a streaming response
-            last_message = messages[-1]
-            message_parts = last_message["parts"]
-            
-            # Convert parts to text for streaming
+            # Get the latest message to stream
+            latest_message = messages[-1]
             message_text = ""
-            for part in message_parts:
+            for part in latest_message["parts"]:
                 if "text" in part:
                     message_text += part["text"]
             
-            # Handle system instruction by prepending it
-            if system_instruction:
+            # Add system instruction to first message only
+            if system_instruction and len(messages) == 1:
                 message_text = f"{system_instruction}\n\n{message_text}"
             
-            print(f"[GEMINI] Sending message to Gemini: {message_text[:200]}{'...' if len(message_text) > 200 else ''}")
+            print(f"[GEMINI] Sending latest message: {message_text[:200]}{'...' if len(message_text) > 200 else ''}")
             print(f"[GEMINI] Tools enabled: {'Yes' if gemini_tools else 'No'}")
             
-            # Pass tools to send_message instead
+            # Send the latest message and stream response
             response = chat.send_message(
                 message_text,
                 generation_config=generation_config,

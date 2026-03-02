@@ -44,13 +44,18 @@ class ClientMessage(BaseModel):
     toolInvocations: Optional[List[ToolInvocation]] = None
 
 
-def convert_to_gemini_messages(messages: List[ClientMessage]) -> List[dict]:
+def convert_to_gemini_messages(messages: List[ClientMessage]) -> tuple[List[dict], str]:
     gemini_messages = []
-
     system_instruction = None
-    for message in messages:
+    
+    print(f"[PROMPT] Converting {len(messages)} messages to Gemini format")
+    
+    for i, message in enumerate(messages):
+        print(f"[PROMPT] Processing message {i+1}: role={message.role}")
+        
         if message.role == 'system':
             system_instruction = message.content
+            print(f"[PROMPT] Found system instruction: {system_instruction[:100]}...")
             continue
             
         message_parts = []
@@ -81,13 +86,16 @@ def convert_to_gemini_messages(messages: List[ClientMessage]) -> List[dict]:
                         }
                     })
         
-        # Map OpenAI roles to Gemini roles
-        gemini_role = "user" if message.role in ["user", "system"] else "model"
+        # Map roles to Gemini format
+        gemini_role = "user" if message.role == "user" else "model"
         
         if message_parts:
-            gemini_messages.append({
+            gemini_message = {
                 "role": gemini_role,
                 "parts": message_parts
-            })
+            }
+            gemini_messages.append(gemini_message)
+            print(f"[PROMPT] Added {gemini_role} message with {len(message_parts)} parts")
     
+    print(f"[PROMPT] Converted to {len(gemini_messages)} Gemini messages")
     return gemini_messages, system_instruction

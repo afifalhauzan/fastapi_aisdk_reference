@@ -33,6 +33,12 @@ async def handle_chat_data(request: Request, protocol: str = Query('data')):
     print(f"\n[API] Incoming chat request - Protocol: {protocol}")
     print(f"[API] Message count: {len(request.messages)}")
     
+    # Debug: Show conversation structure
+    for i, msg in enumerate(request.messages):
+        role = msg.role
+        content_preview = (msg.content[:50] + "...") if msg.content and len(msg.content) > 50 else msg.content
+        print(f"[API] Message {i+1}: {role} -> {content_preview}")
+    
     messages = request.messages
     gemini_messages, system_instruction = convert_to_gemini_messages(messages)
 
