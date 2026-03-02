@@ -18,6 +18,9 @@ def stream_text(
     try:
         messages, system_instruction = messages_and_system
         
+        print(f"[STREAM] Starting stream with {len(messages)} messages")
+        print(f"[STREAM] System instruction: {system_instruction[:100] + '...' if system_instruction and len(system_instruction) > 100 else system_instruction}")
+        
         def format_sse(payload: dict) -> str:
             return f"data: {json.dumps(payload, separators=(',', ':'))}\n\n"
 
@@ -27,11 +30,13 @@ def stream_text(
         text_finished = False
         finish_reason = None
 
+        print(f"[STREAM] Message ID: {message_id}")
         yield format_sse({"type": "start", "messageId": message_id})
 
         # Convert tool definitions to Gemini format
         gemini_tools = None
         if tool_definitions:
+            print(f"[TOOLS] Setting up {len(tool_definitions)} tools")
             gemini_tools = []
             for tool_def in tool_definitions:
                 function_def = tool_def["function"]
@@ -42,14 +47,20 @@ def stream_text(
                         "parameters": function_def["parameters"]
                     }]
                 })
+        else:
+            print("[TOOLS] No tools configured")
 
         # Create generation config
         generation_config = genai.GenerationConfig(
             temperature=0.7,
         )
+        print(f"[CONFIG] Generation config: temperature=0.7")
 
         # Start chat without tools in start_chat
         chat = model.start_chat(history=[])
+        print("[CHAT] Chat session started")
+        
+        chunk_count = 0
 
         # Send the conversation history and get streaming response
         if messages:
@@ -67,6 +78,9 @@ def stream_text(
             if system_instruction:
                 message_text = f"{system_instruction}\n\n{message_text}"
             
+            print(f"[GEMINI] Sending message to Gemini: {message_text[:200]}{'...' if len(message_text) > 200 else ''}")
+            print(f"[GEMINI] Tools enabled: {'Yes' if gemini_tools else 'No'}")
+            
             # Pass tools to send_message instead
             response = chat.send_message(
                 message_text,
@@ -74,12 +88,16 @@ def stream_text(
                 tools=gemini_tools,
                 stream=True
             )
+            
+            print("[GEMINI] Starting stream processing...")
 
             for chunk in response:
                 if hasattr(chunk, 'text') and chunk.text:
                     if not text_started:
+                        print("[TEXT] Text streaming started")
                         yield format_sse({"type": "text-start", "id": text_stream_id})
                         text_started = True
+                    print(f"[TEXT] Text chunk {chunk_count}: {repr(chunk.text[:100])}")
                     yield format_sse(
                         {"type": "text-delta", "id": text_stream_id, "delta": chunk.text}
                     )
@@ -94,6 +112,8 @@ def stream_text(
                                 function_call = part.function_call
                                 tool_name = function_call.name
                                 
+                                print(f"[TOOL] Function call detected: {tool_name}")
+                                
                                 yield format_sse({
                                     "type": "tool-input-start",
                                     "toolCallId": tool_call_id,
@@ -105,6 +125,8 @@ def stream_text(
                                 if hasattr(function_call, 'args') and function_call.args is not None:
                                     arguments = dict(function_call.args)
                                 
+                                print(f"[TOOL] Function arguments: {arguments}")
+                                
                                 yield format_sse({
                                     "type": "tool-input-available",
                                     "toolCallId": tool_call_id,
@@ -115,20 +137,24 @@ def stream_text(
                                 # Execute the tool
                                 tool_function = available_tools.get(tool_name)
                                 if tool_function:
+                                    print(f"[TOOL] Executing tool: {tool_name}")
                                     try:
                                         tool_result = tool_function(**arguments)
+                                        print(f"[TOOL] Tool result: {str(tool_result)[:200]}{'...' if len(str(tool_result)) > 200 else ''}")
                                         yield format_sse({
                                             "type": "tool-output-available",
                                             "toolCallId": tool_call_id,
                                             "output": tool_result,
                                         })
                                     except Exception as error:
+                                        print(f"[ERROR] Tool execution error: {str(error)}")
                                         yield format_sse({
                                             "type": "tool-output-error",
                                             "toolCallId": tool_call_id,
                                             "errorText": str(error),
                                         })
                                 else:
+                                    print(f"[ERROR] Tool not found: {tool_name}")
                                     yield format_sse({
                                         "type": "tool-output-error",
                                         "toolCallId": tool_call_id,
@@ -136,17 +162,20 @@ def stream_text(
                                     })
 
         if text_started and not text_finished:
+            print("[TEXT] Text streaming finished")
             yield format_sse({"type": "text-end", "id": text_stream_id})
             text_finished = True
 
         finish_metadata: Dict[str, Any] = {
             "finishReason": "stop"
         }
-
+        
+        print(f"[STREAM] Stream completed after {chunk_count} chunks")
         yield format_sse({"type": "finish", "messageMetadata": finish_metadata})
         yield "data: [DONE]\n\n"
         
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] Stream error: {str(e)}")
         traceback.print_exc()
         raise
 

@@ -17,9 +17,13 @@ class Request(BaseModel):
 
 @app.post("/api/chat")
 async def handle_chat_data(request: Request, protocol: str = Query('data')):
+    print(f"\n[API] Incoming chat request - Protocol: {protocol}")
+    print(f"[API] Message count: {len(request.messages)}")
+    
     messages = request.messages
     gemini_messages, system_instruction = convert_to_gemini_messages(messages)
 
+    print(f"[API] Using model: {GEMINI_MODEL}")
     genai.configure(api_key=GEMINI_API_KEY)
     client = genai.GenerativeModel(GEMINI_MODEL)
     response = StreamingResponse(
