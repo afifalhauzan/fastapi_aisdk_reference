@@ -2,12 +2,13 @@ import json
 import traceback
 import uuid
 from typing import Any, Callable, Dict, Mapping, Sequence
+import asyncio
 
 from fastapi.responses import StreamingResponse
 import google.generativeai as genai
 
 
-def stream_text(
+async def stream_text(
     model: genai.GenerativeModel,
     messages_and_system: tuple,
     tool_definitions: Sequence[Dict[str, Any]],
@@ -32,6 +33,7 @@ def stream_text(
 
         print(f"[STREAM] Message ID: {message_id}")
         yield format_sse({"type": "start", "messageId": message_id})
+        await asyncio.sleep(0.01)  # Small delay to ensure flushing
 
         # Convert tool definitions to Gemini format
         gemini_tools = None
@@ -92,6 +94,7 @@ def stream_text(
             print("[GEMINI] Starting stream processing...")
 
             for chunk in response:
+                chunk_count += 1
                 if hasattr(chunk, 'text') and chunk.text:
                     if not text_started:
                         print("[TEXT] Text streaming started")
@@ -101,6 +104,7 @@ def stream_text(
                     yield format_sse(
                         {"type": "text-delta", "id": text_stream_id, "delta": chunk.text}
                     )
+                    await asyncio.sleep(0.001)  # Micro-delay to ensure chunk flushing
                 
                 # Handle function calls
                 if hasattr(chunk, 'candidates') and chunk.candidates:
@@ -186,12 +190,19 @@ def patch_response_with_headers(
 ) -> StreamingResponse:
     """Apply the standard streaming headers expected by the Vercel AI SDK."""
 
+    # Debug: Print all headers being set
+    print(f"[HEADERS] Setting streaming headers for protocol: {protocol}")
+    
     response.headers["x-vercel-ai-ui-message-stream"] = "v1"
     response.headers["Cache-Control"] = "no-cache"
     response.headers["Connection"] = "keep-alive"
     response.headers["X-Accel-Buffering"] = "no"
-
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    
     if protocol:
         response.headers.setdefault("x-vercel-ai-protocol", protocol)
-
+    
+    # Debug: Print final headers
+    print(f"[HEADERS] Final response headers: {dict(response.headers)}")
     return response

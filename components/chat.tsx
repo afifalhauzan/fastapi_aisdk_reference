@@ -13,13 +13,24 @@ export function Chat() {
 
   const { messages, setMessages, sendMessage, status, stop } = useChat({
     id: chatId,
+    // Option 1: Direct to FastAPI (current)
+    api: 'http://localhost:8000/api/chat',
+    // Option 2: Use Next.js proxy (uncomment if CORS issues)
+    // api: '/api/chat',
     onError: (error: Error) => {
+      console.error('Chat error:', error);
       if (error.message.includes("Too many requests")) {
         toast.error(
           "You are sending too many messages. Please try again later."
         );
       }
     },
+    onFinish: (message) => {
+      console.log('Chat finished:', message);
+    },
+    onResponse: (response) => {
+      console.log('Response received:', response.status, response.headers.get('content-type'));
+    }
   });
 
   const [messagesContainerRef, messagesEndRef] =
