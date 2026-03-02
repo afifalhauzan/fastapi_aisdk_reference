@@ -24,9 +24,6 @@ export function Chat() {
     onFinish: (message) => {
       console.log('Chat finished:', message);
     },
-    onResponse: (response) => {
-      console.log('Response received:', response.status, response.headers.get('content-type'));
-    }
   });
 
   // Debug: Log message count changes
@@ -50,7 +47,7 @@ export function Chat() {
   };
 
   return (
-    <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
+    <div className="flex flex-col min-w-0 h-screen bg-background">
       <div
         ref={messagesContainerRef}
         className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
